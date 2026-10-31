@@ -71,6 +71,7 @@ public class DataSeeder implements CommandLineRunner {
     @Override
     public void run(String... args) {
         seedAdminUser();
+        seedStaffUser();
         seedDemoPlan();
     }
 
@@ -78,6 +79,26 @@ public class DataSeeder implements CommandLineRunner {
      * Seeds one demo plan linked to a demo product with variants, only on an empty catalogue,
      * so a fresh install has something to subscribe to in the customer portal.
      */
+    private void seedStaffUser() {
+        String staffEmail = "staff@looppay.com";
+        if (userRepository.existsByEmail(staffEmail)) {
+            log.info("✅ Staff user already exists: {}", staffEmail);
+            return;
+        }
+
+        User staffUser = User.builder()
+                .firstName("Demo")
+                .lastName("Staff")
+                .email(staffEmail)
+                .password(passwordEncoder.encode("Staff@1234"))
+                .role(Role.STAFF)
+                .active(true)
+                .build();
+
+        userRepository.save(staffUser);
+        log.info("🌱 Default staff user seeded: staff@looppay.com / Staff@1234");
+    }
+
     private void seedDemoPlan() {
         if (planRepository.count() > 0) {
             return;

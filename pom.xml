@@ -111,6 +111,22 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- ─── Report Export ───────────────────────────────── -->
+
+        <!-- Apache POI: writes Excel (.xlsx) report exports -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.2.5</version>
+        </dependency>
+
+        <!-- OpenPDF: writes PDF report exports -->
+        <dependency>
+            <groupId>com.github.librepdf</groupId>
+            <artifactId>openpdf</artifactId>
+            <version>1.3.43</version>
+        </dependency>
+
         <!-- ─── Testing ─────────────────────────────────────── -->
 
         <!-- Spring Boot Test: JUnit, Mockito, etc. -->
@@ -124,6 +140,13 @@
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- H2 in-memory database: runs the report filter queries in tests without PostgreSQL -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
 

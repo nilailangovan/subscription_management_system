@@ -1,6 +1,7 @@
 package com.brightloop.subscriptionmanagement.controller;
 
 import com.brightloop.subscriptionmanagement.dto.pricing.PricingResult;
+import com.brightloop.subscriptionmanagement.dto.request.ExportFormat;
 import com.brightloop.subscriptionmanagement.dto.request.PortalSubscriptionRequestDto;
 import com.brightloop.subscriptionmanagement.dto.response.ApiResponseDto;
 import com.brightloop.subscriptionmanagement.dto.response.InvoiceResponseDto;
@@ -9,10 +10,13 @@ import com.brightloop.subscriptionmanagement.dto.response.SubscriptionResponseDt
 import com.brightloop.subscriptionmanagement.entity.User;
 import com.brightloop.subscriptionmanagement.exception.ResourceNotFoundException;
 import com.brightloop.subscriptionmanagement.repository.UserRepository;
+import com.brightloop.subscriptionmanagement.service.ExportService;
 import com.brightloop.subscriptionmanagement.service.PortalService;
+import com.brightloop.subscriptionmanagement.service.ReportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,6 +27,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
 
@@ -40,6 +45,8 @@ public class PortalController {
 
     private final PortalService portalService;
     private final UserRepository userRepository;
+    private final ReportService reportService;
+    private final ExportService exportService;
 
     @GetMapping("/plans")
     @Operation(summary = "Plans available to subscribe to (ACTIVE and within their dates), with products, variants and final prices")
@@ -114,6 +121,14 @@ public class PortalController {
         Page<InvoiceResponseDto> invoices = portalService.getMyInvoices(
                 subscriptionId, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id")), currentCustomer(principal));
         return ResponseEntity.ok(ApiResponseDto.success("Invoices retrieved successfully", invoices));
+    }
+
+    @GetMapping("/invoices/export")
+    @Operation(summary = "Download all your invoices as pdf or xlsx (204 when you have none)")
+    public void exportMyInvoices(@RequestParam(defaultValue = "pdf") String format, Principal principal,
+                                 HttpServletResponse response) throws IOException {
+        ExportFormat exportFormat = ExportFormat.from(format);
+        ExportDownloads.send(response, exportService, reportService.myInvoicesReport(currentCustomer(principal)), exportFormat);
     }
 
     @GetMapping("/invoices/{id}")

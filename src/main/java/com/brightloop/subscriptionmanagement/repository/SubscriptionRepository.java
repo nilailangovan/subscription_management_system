@@ -4,16 +4,30 @@ import com.brightloop.subscriptionmanagement.entity.Subscription;
 import com.brightloop.subscriptionmanagement.entity.SubscriptionStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
  * Spring Data JPA Repository for Subscription entity operations.
  */
 @Repository
-public interface SubscriptionRepository extends JpaRepository<Subscription, Long> {
+public interface SubscriptionRepository extends JpaRepository<Subscription, Long>, JpaSpecificationExecutor<Subscription> {
+
+    // Report lists and exports: customer and plan come in the same query (no N+1)
+    @Override
+    @EntityGraph(attributePaths = {"customer", "plan"})
+    Page<Subscription> findAll(Specification<Subscription> spec, Pageable pageable);
+
+    @Override
+    @EntityGraph(attributePaths = {"customer", "plan"})
+    List<Subscription> findAll(Specification<Subscription> spec, Sort sort);
 
     /**
      * Find active subscription by ID.

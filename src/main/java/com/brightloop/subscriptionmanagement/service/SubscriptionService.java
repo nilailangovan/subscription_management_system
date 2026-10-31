@@ -393,7 +393,7 @@ public class SubscriptionService {
         return candidate;
     }
 
-    private SubscriptionResponseDto mapToResponseDto(Subscription subscription) {
+    public SubscriptionResponseDto mapToResponseDto(Subscription subscription) {
         List<SubscriptionLineResponseDto> lineDtos = subscription.getLines().stream()
                 .map(line -> SubscriptionLineResponseDto.builder()
                         .id(line.getId())

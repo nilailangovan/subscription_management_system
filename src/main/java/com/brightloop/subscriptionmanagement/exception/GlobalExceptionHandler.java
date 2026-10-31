@@ -1,6 +1,7 @@
 package com.brightloop.subscriptionmanagement.exception;
 
 import com.brightloop.subscriptionmanagement.dto.response.ErrorResponseDto;
+import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -78,6 +79,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessRuleException.class)
     public ResponseEntity<ErrorResponseDto> handleBusinessRule(BusinessRuleException ex) {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    /**
+     * Handles a ?sort= field that does not exist (e.g. sort=colour,asc) as a client error, not a 500.
+     */
+    @ExceptionHandler(PropertyReferenceException.class)
+    public ResponseEntity<ErrorResponseDto> handleUnknownSortField(PropertyReferenceException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Cannot sort by '" + ex.getPropertyName() + "': no such field.");
     }
 
     /**
