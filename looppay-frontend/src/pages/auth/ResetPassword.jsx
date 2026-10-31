@@ -52,7 +52,7 @@ const ResetPassword = () => {
       setSuccess(true);
       setTimeout(() => {
         navigate('/login');
-      }, 2000);
+      }, 2500);
 
     } catch (err) {
       if (err.response?.data?.errors) {
@@ -60,27 +60,36 @@ const ResetPassword = () => {
       } else if (err.response?.data?.message) {
         setGeneralError(err.response.data.message);
       } else {
-        setGeneralError('Password reset failed. The link may be expired or already used.');
+        setGeneralError('Password reset failed. The reset link may be expired or already used.');
       }
     } finally {
       setLoading(false);
     }
   };
 
+  // Offer a fresh link when the backend says this one can no longer be used
+  const isTokenExpiredOrUsed = /expired|used|invalid/i.test(generalError);
+
   return (
     <AuthLayout
       title="Create new password"
-      subtitle="Choose a new password for your LoopPay account"
+      subtitle="Choose a secure new password for your account"
     >
       {generalError && (
-        <div className="mb-4 p-3.5 bg-status-danger-bg border border-status-danger/30 rounded-xl flex items-start gap-2.5 text-xs text-status-danger font-medium animate-in fade-in">
-          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-          <span>
-            {generalError}{' '}
-            <Link to="/forgot-password" className="underline font-semibold">
-              Request a new link
-            </Link>
-          </span>
+        <div className="mb-4 p-3.5 bg-status-danger-bg border border-status-danger/30 rounded-xl space-y-2 text-xs text-status-danger font-medium animate-in fade-in">
+          <div className="flex items-start gap-2.5">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <span>{generalError}</span>
+          </div>
+          {isTokenExpiredOrUsed && (
+            <div className="pt-1">
+              <Link to="/forgot-password">
+                <Button variant="outline" size="sm" className="w-full text-xs">
+                  Request a New Reset Link
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       )}
 
@@ -120,6 +129,12 @@ const ResetPassword = () => {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-3.5">
+          {/* The link is only checked by the server on submit, so this says "detected", not "verified" */}
+          <div className="p-3 bg-status-success-bg border border-status-success/30 rounded-xl flex items-center gap-2 text-xs text-status-success">
+            <CheckCircle className="w-4 h-4 flex-shrink-0" />
+            <span className="font-semibold">Reset link detected. Choose your new password below.</span>
+          </div>
+
           <div>
             <Input
               label="New Password"
@@ -174,4 +189,3 @@ const ResetPassword = () => {
 };
 
 export default ResetPassword;
-
