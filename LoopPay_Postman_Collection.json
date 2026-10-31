@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "looppay-api-collection",
     "name": "LoopPay — Subscription Management API",
-    "description": "Postman Collection for testing LoopPay Auth & Admin APIs",
+    "description": "Postman Collection for testing LoopPay Auth, Products, Variants, Plans, and Lifecycle Actions",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -132,7 +132,7 @@
       ]
     },
     {
-      "name": "2. Admin Only APIs",
+      "name": "2. Admin Staff Management",
       "item": [
         {
           "name": "2.1 Create Staff User (Admin Only)",
@@ -142,7 +142,7 @@
               "bearer": [
                 {
                   "key": "token",
-                  "value": "PASTE_ADMIN_JWT_TOKEN_HERE",
+                  "value": "{{ADMIN_JWT_TOKEN}}",
                   "type": "string"
                 }
               ]
@@ -169,7 +169,580 @@
           }
         }
       ]
+    },
+    {
+      "name": "3. Products API",
+      "item": [
+        {
+          "name": "3.1 Create Product (Admin Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Odoo Cloud ERP Suite\",\n  \"type\": \"SOFTWARE\",\n  \"salesPrice\": 1000.00,\n  \"costPrice\": 400.00,\n  \"notes\": \"Flagship cloud ERP platform\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/products",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "products"]
+            }
+          }
+        },
+        {
+          "name": "3.2 Update Product (Admin Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Odoo Cloud ERP Enterprise\",\n  \"salesPrice\": 1200.00\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/products/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "products", "1"]
+            }
+          }
+        },
+        {
+          "name": "3.3 Get Product by ID (Admin & Staff)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_OR_STAFF_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/products/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "products", "1"]
+            }
+          }
+        },
+        {
+          "name": "3.4 List Products with Pagination & Search (Admin & Staff)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_OR_STAFF_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/products?search=Odoo&page=0&size=10",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "products"],
+              "query": [
+                { "key": "search", "value": "Odoo" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.5 Soft Delete Product (Admin Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "http://localhost:8080/api/products/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "products", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Product Variants API",
+      "item": [
+        {
+          "name": "4.1 Create Variant for Product (Admin Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attribute\": \"Brand\",\n  \"value\": \"Odoo\",\n  \"extraPrice\": 560.00\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/products/1/variants",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "products", "1", "variants"]
+            },
+            "description": "Calculates finalPrice = product.salesPrice + extraPrice."
+          }
+        },
+        {
+          "name": "4.2 Update Variant (Admin Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"attribute\": \"Brand\",\n  \"value\": \"Odoo Pro\",\n  \"extraPrice\": 600.00\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/products/variants/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "products", "variants", "1"]
+            }
+          }
+        },
+        {
+          "name": "4.3 Get Variant by ID (Admin & Staff)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_OR_STAFF_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/products/variants/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "products", "variants", "1"]
+            }
+          }
+        },
+        {
+          "name": "4.4 List Variants for Product (Admin & Staff)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_OR_STAFF_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/products/1/variants?page=0&size=10",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "products", "1", "variants"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "4.5 Soft Delete Variant (Admin Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "http://localhost:8080/api/products/variants/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "products", "variants", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Subscription Plans API",
+      "item": [
+        {
+          "name": "5.1 Create Plan (Admin Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Pro Annual Subscription\",\n  \"productId\": 1,\n  \"price\": 199.99,\n  \"billingPeriod\": \"MONTHLY\",\n  \"minQuantity\": 1,\n  \"startDate\": \"2026-01-01\",\n  \"endDate\": \"2026-12-31\",\n  \"autoClose\": true,\n  \"closable\": true,\n  \"pausable\": true,\n  \"renewable\": true\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/plans",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "plans"]
+            }
+          }
+        },
+        {
+          "name": "5.2 Update Plan (Admin Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Pro Annual Subscription (Updated)\",\n  \"price\": 219.99\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/plans/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "plans", "1"]
+            }
+          }
+        },
+        {
+          "name": "5.3 Get Plan by ID (Admin & Staff)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_OR_STAFF_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/plans/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "plans", "1"]
+            }
+          }
+        },
+        {
+          "name": "5.4 List All Plans with Search (Admin & Staff)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_OR_STAFF_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/plans?search=Pro&page=0&size=10",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "plans"],
+              "query": [
+                { "key": "search", "value": "Pro" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.5 Customer Available Plans (Active & Valid Dates)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{CUSTOMER_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/plans/available?page=0&size=10",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "plans", "available"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            },
+            "description": "Returns active plans whose startDate <= today <= endDate."
+          }
+        },
+        {
+          "name": "5.6 Soft Delete Plan (Admin Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "url": {
+              "raw": "http://localhost:8080/api/plans/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "plans", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Plan Lifecycle Actions (Admin Only)",
+      "item": [
+        {
+          "name": "6.1 Close Plan",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "url": {
+              "raw": "http://localhost:8080/api/plans/1/close",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "plans", "1", "close"]
+            },
+            "description": "Sets plan status to CLOSED. Rejects with 400 if closable=false."
+          }
+        },
+        {
+          "name": "6.2 Pause Plan",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "url": {
+              "raw": "http://localhost:8080/api/plans/1/pause",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "plans", "1", "pause"]
+            },
+            "description": "Sets plan status to PAUSED. Rejects with 400 if pausable=false."
+          }
+        },
+        {
+          "name": "6.3 Resume Plan",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "url": {
+              "raw": "http://localhost:8080/api/plans/1/resume",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "plans", "1", "resume"]
+            },
+            "description": "Sets status to ACTIVE. Rejects with 400 if status is not PAUSED."
+          }
+        },
+        {
+          "name": "6.4 Renew Plan",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newEndDate\": \"2027-12-31\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/plans/1/renew",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "plans", "1", "renew"]
+            },
+            "description": "Renews plan. Rejects with 400 if renewable=false."
+          }
+        }
+      ]
     }
   ]
 }
-

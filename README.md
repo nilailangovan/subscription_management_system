@@ -283,3 +283,129 @@ Content-Type: application/json
 | **Role Authorization** | `@PreAuthorize("hasRole('ADMIN')")` on staff creation endpoint | ✅ |
 | **Default Admin Seed** | Seeded idempotently on startup with credentials in `application.properties` | ✅ |
 | **Clean Code & Comments** | Detailed Javadoc and inline explanations suitable for freshers | ✅ |
+
+
+---
+
+# 📦 Phase 2: Products, Variants & Subscription Plans
+
+LoopPay Phase 2 introduces comprehensive catalog management, variant pricing calculation, subscription plan lifecycles, and automated scheduled auto-closure.
+
+## 🧱 Entities & Business Logic
+
+### 1. Product Entity (`Product`)
+- **Fields**: `id`, `name`, `type` (`SERVICE`, `GOODS`, `SOFTWARE`), `salesPrice`, `costPrice`, `notes`, `active` (soft-delete flag), `createdAt`, `updatedAt`.
+- **Validation**: `salesPrice >= 0`, `costPrice >= 0`.
+- **Relationship**: `@OneToMany` with `ProductVariant`.
+
+### 2. ProductVariant Entity (`ProductVariant`)
+- **Fields**: `id`, `product` (parent link), `attribute` (e.g., `"Brand"`, `"Storage"`), `value` (e.g., `"Odoo"`, `"100GB"`), `extraPrice` (e.g., `560.00`), `active`.
+- **Pricing Formula**:
+  $$\text{Final Price} = \text{Product.salesPrice} + \text{Variant.extraPrice}$$
+- **DB Index**: `@Index(name = "idx_product_variants_product_id", columnList = "product_id")`.
+
+### 3. Subscription Plan Entity (`Plan`)
+- **Fields**: `name`, `product` (optional base product link), `price`, `billingPeriod` (`DAILY`, `WEEKLY`, `MONTHLY`, `YEARLY`), `minQuantity` ($\ge 1$), `startDate`, `endDate`, `autoClose`, `closable`, `pausable`, `renewable`, `status` (`ACTIVE`, `PAUSED`, `CLOSED`), `active`.
+- **Validation**:
+  - `price >= 0`
+  - `minQuantity >= 1`
+  - `endDate` strictly after `startDate`
+- **DB Indexes**:
+  - `@Index(name = "idx_plans_status", columnList = "status")`
+  - `@Index(name = "idx_plans_product_id", columnList = "product_id")`
+  - `@Index(name = "idx_plans_billing_period", columnList = "billing_period")`
+
+---
+
+## ⚡ Plan Lifecycle Actions (`ADMIN` Only)
+
+All action endpoints enforce business constraints and return HTTP `400 Bad Request` (`BusinessRuleException`) if violated:
+
+| Action | Endpoint | Pre-conditions | Status Transition |
+|--------|----------|----------------|-------------------|
+| **Close** | `PATCH /api/plans/{id}/close` | `closable == true` and `status != CLOSED` | $\rightarrow$ `CLOSED` |
+| **Pause** | `PATCH /api/plans/{id}/pause` | `pausable == true` and `status == ACTIVE` | $\rightarrow$ `PAUSED` |
+| **Resume** | `PATCH /api/plans/{id}/resume` | `status == PAUSED` | $\rightarrow$ `ACTIVE` |
+| **Renew** | `POST /api/plans/{id}/renew` | `renewable == true` | $\rightarrow$ `ACTIVE`, extends `endDate` |
+
+- **Renewal Logic**:
+  - If optional body `{"newEndDate": "YYYY-MM-DD"}` is passed, verifies `newEndDate > current endDate`.
+  - If omitted, automatically adds 1 full `billingPeriod` cycle to the current `endDate` (or today if expired).
+  - Automatically restores plan status to `ACTIVE`.
+
+---
+
+## ⏰ Automated Scheduled Job (`PlanScheduler`)
+
+LoopPay includes an automated Spring Scheduler (`@EnableScheduling`):
+- Runs hourly (`cron = "0 0 * * * *"`)
+- Query: Finds all plans where `autoClose == true`, `status != CLOSED`, and `endDate < today`
+- Automatically updates status to `CLOSED` and persists changes.
+
+---
+
+## 📡 Phase 2 REST API Reference
+
+### Products Endpoints (`/api/products`)
+| Method | Endpoint | RBAC | Description |
+|--------|----------|------|-------------|
+| `POST` | `/api/products` | `ADMIN` | Create a new product |
+| `PUT` | `/api/products/{id}` | `ADMIN` | Update an existing product |
+| `DELETE` | `/api/products/{id}` | `ADMIN` | Soft delete a product (`active=false`) |
+| `GET` | `/api/products/{id}` | `ADMIN, STAFF` | Get product details by ID |
+| `GET` | `/api/products?search={name}&page=0&size=10` | `ADMIN, STAFF` | Paginated search of products |
+
+### Product Variants Endpoints (`/api/products/{productId}/variants` & `/api/products/variants/{variantId}`)
+| Method | Endpoint | RBAC | Description |
+|--------|----------|------|-------------|
+| `POST` | `/api/products/{productId}/variants` | `ADMIN` | Create a variant for a product |
+| `PUT` | `/api/products/variants/{variantId}` | `ADMIN` | Update a variant |
+| `DELETE` | `/api/products/variants/{variantId}` | `ADMIN` | Soft delete a variant (`active=false`) |
+| `GET` | `/api/products/variants/{variantId}` | `ADMIN, STAFF` | Get variant by ID (returns `finalPrice`) |
+| `GET` | `/api/products/{productId}/variants` | `ADMIN, STAFF` | Paginated list of variants for a product |
+
+### Plans Endpoints (`/api/plans`)
+| Method | Endpoint | RBAC | Description |
+|--------|----------|------|-------------|
+| `POST` | `/api/plans` | `ADMIN` | Create a new subscription plan |
+| `PUT` | `/api/plans/{id}` | `ADMIN` | Update an existing plan |
+| `DELETE` | `/api/plans/{id}` | `ADMIN` | Soft delete a plan (`active=false`) |
+| `GET` | `/api/plans/{id}` | `ADMIN, STAFF` | Get plan details by ID |
+| `GET` | `/api/plans?search={name}&page=0&size=10` | `ADMIN, STAFF` | Paginated search of all plans |
+| `GET` | `/api/plans/available?page=0&size=10` | `CUSTOMER, ADMIN, STAFF` | Available plans only (active, `ACTIVE`, valid date range) |
+| `PATCH` | `/api/plans/{id}/close` | `ADMIN` | Close plan (enforces `closable`) |
+| `PATCH` | `/api/plans/{id}/pause` | `ADMIN` | Pause plan (enforces `pausable`) |
+| `PATCH` | `/api/plans/{id}/resume` | `ADMIN` | Resume plan from paused status |
+| `POST` | `/api/plans/{id}/renew` | `ADMIN` | Renew plan (enforces `renewable`) |
+
+---
+
+## 🧪 Unit Tests Summary
+
+All Phase 1 and Phase 2 unit tests execute cleanly with **26 passing tests (0 failures, 0 errors)**:
+
+- `AuthServiceTest` (5 tests):
+  - User signup validation & password regex verification
+  - Duplicate email collision detection (409)
+  - Login authentication & JWT generation
+  - Bad credentials handling
+  - Admin creation of STAFF users
+- `ProductVariantServiceTest` (5 tests):
+  - Pricing formula: $\text{Final Price} = \text{salesPrice} + \text{extraPrice}$ (e.g. $1000 + 560 = 1560$)
+  - Creation of variants with positive/zero extraPrice
+  - Rejection of negative extraPrice (400 `BusinessRuleException`)
+  - Missing parent product error handling (404 `ResourceNotFoundException`)
+  - Soft-deletion validation (`active=false`)
+- `PlanServiceTest` (16 tests):
+  - Date validation: `endDate` must be strictly after `startDate`
+  - Negative price rejection
+  - Minimum quantity validation ($\ge 1$)
+  - Close action when `closable=true` vs `closable=false` rejection
+  - Rejection when closing an already CLOSED plan
+  - Pause action when `pausable=true` vs `pausable=false` rejection
+  - Rejection when pausing non-ACTIVE plan
+  - Resume action when `status=PAUSED` vs `status=ACTIVE` rejection
+  - Renew action with explicit `newEndDate`
+  - Renew action with billing period cycle extension
+  - Renew action rejection when `renewable=false`
+  - Scheduled auto-close execution for expired plans with `autoClose=true`
