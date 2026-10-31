@@ -4,6 +4,7 @@ com\brightloop\subscriptionmanagement\dto\request\LoginRequestDto.class
 com\brightloop\subscriptionmanagement\dto\request\ResetPasswordRequestDto.class
 com\brightloop\subscriptionmanagement\config\DataSeeder.class
 com\brightloop\subscriptionmanagement\config\JwtUtil.class
+com\brightloop\subscriptionmanagement\config\OpenApiConfig.class
 com\brightloop\subscriptionmanagement\dto\request\SignupRequestDto.class
 com\brightloop\subscriptionmanagement\dto\response\AuthResponseDto.class
 com\brightloop\subscriptionmanagement\exception\GlobalExceptionHandler.class
