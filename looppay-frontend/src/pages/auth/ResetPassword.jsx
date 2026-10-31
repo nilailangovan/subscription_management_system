@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { KeyRound, Lock, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
+import { KeyRound, Lock, AlertCircle, CheckCircle, ArrowLeft, RefreshCw } from 'lucide-react';
 import AuthLayout from '../../components/layout/AuthLayout';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
@@ -11,6 +11,7 @@ import { validatePassword } from '../../utils/validators';
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
   const [token, setToken] = useState('');
+  const [hasTokenFromUrl, setHasTokenFromUrl] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState({});
@@ -23,8 +24,9 @@ const ResetPassword = () => {
   // If token is in the query params (e.g. from the reset email link ?token=xyz), auto-fill it
   useEffect(() => {
     const tokenFromUrl = searchParams.get('token');
-    if (tokenFromUrl) {
-      setToken(tokenFromUrl);
+    if (tokenFromUrl && tokenFromUrl.trim()) {
+      setToken(tokenFromUrl.trim());
+      setHasTokenFromUrl(true);
     }
   }, [searchParams]);
 
@@ -63,7 +65,7 @@ const ResetPassword = () => {
       setSuccess(true);
       setTimeout(() => {
         navigate('/login');
-      }, 2000);
+      }, 2500);
 
     } catch (err) {
       if (err.response?.data?.errors) {
@@ -71,22 +73,39 @@ const ResetPassword = () => {
       } else if (err.response?.data?.message) {
         setGeneralError(err.response.data.message);
       } else {
-        setGeneralError('Password reset failed. The token may be expired or already used.');
+        setGeneralError('Password reset failed. The reset link may be expired or already used.');
       }
     } finally {
       setLoading(false);
     }
   };
 
+  const isTokenExpiredOrUsed = generalError && (
+    generalError.toLowerCase().includes('expired') ||
+    generalError.toLowerCase().includes('used') ||
+    generalError.toLowerCase().includes('invalid')
+  );
+
   return (
     <AuthLayout
       title="Create new password"
-      subtitle="Enter your recovery token and pick a secure new password"
+      subtitle="Choose a secure new password for your account"
     >
       {generalError && (
-        <div className="mb-4 p-3.5 bg-status-danger-bg border border-status-danger/30 rounded-xl flex items-start gap-2.5 text-xs text-status-danger font-medium animate-in fade-in">
-          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-          <span>{generalError}</span>
+        <div className="mb-4 p-3.5 bg-status-danger-bg border border-status-danger/30 rounded-xl space-y-2 text-xs text-status-danger font-medium animate-in fade-in">
+          <div className="flex items-start gap-2.5">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <span>{generalError}</span>
+          </div>
+          {isTokenExpiredOrUsed && (
+            <div className="pt-1">
+              <Link to="/forgot-password">
+                <Button variant="outline" size="sm" className="w-full text-xs">
+                  Request a New Reset Link
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       )}
 
@@ -110,18 +129,30 @@ const ResetPassword = () => {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-3.5">
-          <Input
-            label="Reset Token"
-            id="token"
-            name="token"
-            placeholder="Paste UUID token from email / console"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            error={errors.token}
-            icon={KeyRound}
-            required
-            helperText="Tokens expire after 1 hour."
-          />
+          {hasTokenFromUrl ? (
+            <div className="p-3 bg-emerald-50 border border-emerald-200/80 rounded-xl flex items-center justify-between text-xs text-emerald-800">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                <span className="font-semibold">Reset link verified</span>
+              </div>
+              <span className="text-[10px] text-emerald-600 bg-emerald-100/70 px-2 py-0.5 rounded font-mono">
+                token active
+              </span>
+            </div>
+          ) : (
+            <Input
+              label="Reset Token"
+              id="token"
+              name="token"
+              placeholder="Paste UUID token from email link"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+              error={errors.token}
+              icon={KeyRound}
+              required
+              helperText="Tokens expire 1 hour after request."
+            />
+          )}
 
           <div>
             <Input
@@ -177,4 +208,3 @@ const ResetPassword = () => {
 };
 
 export default ResetPassword;
-
