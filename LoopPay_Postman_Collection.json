@@ -485,7 +485,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Pro Annual Subscription\",\n  \"productId\": 1,\n  \"price\": 199.99,\n  \"billingPeriod\": \"MONTHLY\",\n  \"minQuantity\": 1,\n  \"startDate\": \"2026-01-01\",\n  \"endDate\": \"2026-12-31\",\n  \"autoClose\": true,\n  \"closable\": true,\n  \"pausable\": true,\n  \"renewable\": true\n}"
+              "raw": "{\n  \"name\": \"Pro Annual Subscription\",\n  \"productId\": 1,\n  \"productIds\": [1],\n  \"price\": 199.99,\n  \"billingPeriod\": \"MONTHLY\",\n  \"minQuantity\": 1,\n  \"startDate\": \"2026-01-01\",\n  \"endDate\": \"2026-12-31\",\n  \"autoClose\": true,\n  \"closable\": true,\n  \"pausable\": true,\n  \"renewable\": true\n}"
             },
             "url": {
               "raw": "http://localhost:8080/api/plans",
@@ -1011,6 +1011,372 @@
               ]
             },
             "description": "Lists subscriptions with optional status filter and search."
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Customer Portal (CUSTOMER Only)",
+      "description": "Self-service flow for a logged-in CUSTOMER. Log in as a customer (1.2) and set CUSTOMER_JWT_TOKEN. The customer always comes from the token; prices are always recalculated on the server.",
+      "item": [
+        {
+          "name": "8.1 Available Plans (with products, variants, final prices)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{CUSTOMER_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/portal/plans?page=0&size=10",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "portal",
+                "plans"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "8.2 Get One Available Plan",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{CUSTOMER_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/portal/plans/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "portal",
+                "plans",
+                "1"
+              ]
+            },
+            "description": "400 if the plan is paused, closed, expired or not started yet."
+          }
+        },
+        {
+          "name": "8.3 Payment Terms",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{CUSTOMER_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/portal/payment-terms",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "portal",
+                "payment-terms"
+              ]
+            }
+          }
+        },
+        {
+          "name": "8.4 Preview Price (saves nothing)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{CUSTOMER_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"planId\": 1,\n  \"lines\": [\n    {\n      \"productId\": 1,\n      \"variantId\": 2,\n      \"quantity\": 1\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/portal/subscriptions/preview",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "portal",
+                "subscriptions",
+                "preview"
+              ]
+            },
+            "description": "400 if a line quantity is below the plan minQuantity."
+          }
+        },
+        {
+          "name": "8.5 Subscribe",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{CUSTOMER_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"planId\": 1,\n  \"lines\": [\n    {\n      \"productId\": 1,\n      \"variantId\": 2,\n      \"quantity\": 1\n    }\n  ],\n  \"startDate\": \"2026-11-01\",\n  \"paymentTerms\": \"Net 30\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/portal/subscriptions",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "portal",
+                "subscriptions"
+              ]
+            },
+            "description": "Creates SUB-xxxx for the logged-in customer: DRAFT -> QUOTATION -> CONFIRMED (-> ACTIVE when app.subscription.auto-activate-on-confirm=true). Any price in the body is ignored."
+          }
+        },
+        {
+          "name": "8.6 Activate My Subscription",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{CUSTOMER_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/portal/subscriptions/1/activate",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "portal",
+                "subscriptions",
+                "1",
+                "activate"
+              ]
+            },
+            "description": "Only when app.subscription.auto-activate-on-confirm=false, for your own CONFIRMED subscription."
+          }
+        },
+        {
+          "name": "8.7 My Subscriptions",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{CUSTOMER_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/portal/subscriptions?page=0&size=10",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "portal",
+                "subscriptions"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "8.8 My Subscription by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{CUSTOMER_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/portal/subscriptions/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "portal",
+                "subscriptions",
+                "1"
+              ]
+            },
+            "description": "404 if the subscription belongs to another customer."
+          }
+        },
+        {
+          "name": "8.9 My Invoices",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{CUSTOMER_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/portal/invoices?page=0&size=10",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "portal",
+                "invoices"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "8.10 My Invoice by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{CUSTOMER_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/api/portal/invoices/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "portal",
+                "invoices",
+                "1"
+              ]
+            },
+            "description": "404 if the invoice belongs to another customer."
           }
         }
       ]

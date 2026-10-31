@@ -9,7 +9,7 @@ import Modal from '../../components/common/Modal';
 import { useToast, apiErrorMessage } from '../../components/common/Toast';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
-import { formatMoney } from '../../utils/format';
+import { formatMoney, CURRENCY } from '../../utils/format';
 
 const PAGE_SIZE = 10;
 const BILLING_PERIODS = ['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'].map((p) => ({ value: p, label: p }));
@@ -17,7 +17,7 @@ const BILLING_PERIODS = ['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'].map((p) => ({ v
 const PLAN_STATUS_VARIANT = { ACTIVE: 'success', PAUSED: 'warning', CLOSED: 'neutral' };
 const EMPTY_FORM = {
   name: '',
-  productId: '',
+  productIds: [],
   price: '',
   billingPeriod: 'MONTHLY',
   minQuantity: '1',
@@ -158,6 +158,15 @@ const Plans = () => {
     if (formErrors[name]) setFormErrors((prev) => ({ ...prev, [name]: '' }));
   };
 
+  const toggleProduct = (productId) => {
+    setForm((prev) => ({
+      ...prev,
+      productIds: prev.productIds.includes(productId)
+        ? prev.productIds.filter((id) => id !== productId)
+        : [...prev.productIds, productId],
+    }));
+  };
+
   const handleCreate = async (e) => {
     e.preventDefault();
 
@@ -177,7 +186,6 @@ const Plans = () => {
     const payload = {
       ...form,
       name: form.name.trim(),
-      productId: form.productId ? Number(form.productId) : null,
       price: Number(form.price),
       minQuantity: Number(form.minQuantity),
     };
@@ -222,7 +230,9 @@ const Plans = () => {
       render: (p) => (
         <div>
           <span className="font-semibold">{p.name}</span>
-          <span className="block text-[11px] text-neutral-500">{p.productName || 'No product'}</span>
+          <span className="block text-[11px] text-neutral-500">
+            {(p.products?.length ? p.products.map((product) => product.name).join(', ') : p.productName) || 'No products'}
+          </span>
         </div>
       ),
     },
@@ -332,22 +342,36 @@ const Plans = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title="Add Plan"
-        subtitle="Prices are in USD"
+        subtitle={`Prices are in ${CURRENCY}`}
         maxWidth="max-w-2xl"
       >
         <form onSubmit={handleCreate} className="space-y-3.5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Input label="Plan Name" name="name" value={form.name} onChange={handleChange} error={formErrors.name} required />
-            <Select
-              label="Product"
-              name="productId"
-              value={form.productId}
-              onChange={handleChange}
-              options={productOptions}
-              placeholder="No product"
-              error={formErrors.productId}
-            />
-          </div>
+          <Input label="Plan Name" name="name" value={form.name} onChange={handleChange} error={formErrors.name} required />
+
+          <fieldset>
+            <legend className="block text-sm font-semibold text-aubergine mb-1.5">Products in this plan</legend>
+            {productOptions.length === 0 ? (
+              <p className="text-xs text-neutral-500">No products yet. Add products first so customers have something to subscribe to.</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto p-0.5">
+                {productOptions.map((option) => (
+                  <label
+                    key={option.value}
+                    className="flex items-center gap-2 p-2.5 rounded-xl border border-silver-border text-sm text-aubergine cursor-pointer has-[:checked]:border-aubergine has-[:checked]:bg-aubergine-50"
+                  >
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 accent-aubergine"
+                      checked={form.productIds.includes(option.value)}
+                      onChange={() => toggleProduct(option.value)}
+                    />
+                    {option.label}
+                  </label>
+                ))}
+              </div>
+            )}
+            {formErrors.productIds && <p className="mt-1.5 text-xs text-status-danger font-medium">{formErrors.productIds}</p>}
+          </fieldset>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Input

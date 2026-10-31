@@ -10,6 +10,7 @@ import Input from '../../components/common/Input';
 import Modal from '../../components/common/Modal';
 import Table from '../../components/common/Table';
 import api from '../../api/axios';
+import { formatMoney } from '../../utils/format';
 
 const STATUS_TABS = ['ALL', 'DRAFT', 'QUOTATION', 'CONFIRMED', 'ACTIVE', 'CLOSED'];
 
@@ -242,7 +243,7 @@ const SubscriptionManagement = () => {
       header: 'Grand Total',
       render: (row) => (
         <span className="font-semibold text-xs text-aubergine">
-          ${Number(row.grandTotal).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+          {formatMoney(row.grandTotal)}
         </span>
       )
     },
@@ -391,7 +392,7 @@ const SubscriptionManagement = () => {
               <div className="p-3 bg-silver-light rounded-xl border border-silver-border">
                 <span className="text-[10px] text-neutral-500 uppercase font-semibold block">Grand Total</span>
                 <span className="text-sm font-bold text-aubergine block mt-1">
-                  ${Number(selectedSub.grandTotal).toFixed(2)}
+                  {formatMoney(selectedSub.grandTotal)}
                 </span>
               </div>
               <div className="p-3 bg-silver-light rounded-xl border border-silver-border">
@@ -439,9 +440,9 @@ const SubscriptionManagement = () => {
                       <tr key={idx} className="hover:bg-silver-light/40">
                         <td className="p-2.5 font-medium text-aubergine">{line.productName}</td>
                         <td className="p-2.5 text-center">{line.quantity}</td>
-                        <td className="p-2.5 text-right">${Number(line.unitPrice).toFixed(2)}</td>
-                        <td className="p-2.5 text-right">${Number(line.tax).toFixed(2)}</td>
-                        <td className="p-2.5 text-right font-bold text-aubergine">${Number(line.amount).toFixed(2)}</td>
+                        <td className="p-2.5 text-right">{formatMoney(line.unitPrice)}</td>
+                        <td className="p-2.5 text-right">{formatMoney(line.tax)}</td>
+                        <td className="p-2.5 text-right font-bold text-aubergine">{formatMoney(line.amount)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -453,19 +454,19 @@ const SubscriptionManagement = () => {
             <div className="p-4 bg-silver-light rounded-xl space-y-1.5 text-xs">
               <div className="flex justify-between text-neutral-600">
                 <span>Subtotal:</span>
-                <span className="font-semibold">${Number(selectedSub.subtotal).toFixed(2)}</span>
+                <span className="font-semibold">{formatMoney(selectedSub.subtotal)}</span>
               </div>
               <div className="flex justify-between text-neutral-600">
                 <span>Total Tax:</span>
-                <span className="font-semibold">${Number(selectedSub.totalTax).toFixed(2)}</span>
+                <span className="font-semibold">{formatMoney(selectedSub.totalTax)}</span>
               </div>
               <div className="flex justify-between text-neutral-600">
                 <span>Total Discount:</span>
-                <span className="font-semibold">-${Number(selectedSub.totalDiscount).toFixed(2)}</span>
+                <span className="font-semibold">-{formatMoney(selectedSub.totalDiscount)}</span>
               </div>
               <div className="flex justify-between text-sm font-bold text-aubergine pt-2 border-t border-silver-border">
                 <span>Grand Total:</span>
-                <span>${Number(selectedSub.grandTotal).toFixed(2)}</span>
+                <span>{formatMoney(selectedSub.grandTotal)}</span>
               </div>
             </div>
 

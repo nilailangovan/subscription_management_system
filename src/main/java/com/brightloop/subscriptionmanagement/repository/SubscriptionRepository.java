@@ -20,6 +20,9 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
      */
     Optional<Subscription> findByIdAndActiveTrue(Long id);
 
+    // Ownership check for the customer portal
+    boolean existsByIdAndCustomerIdAndActiveTrue(Long id, Long customerId);
+
     /**
      * Check if a subscription number already exists.
      */

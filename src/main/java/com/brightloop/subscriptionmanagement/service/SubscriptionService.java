@@ -13,6 +13,7 @@ import com.brightloop.subscriptionmanagement.exception.BusinessRuleException;
 import com.brightloop.subscriptionmanagement.exception.ResourceNotFoundException;
 import com.brightloop.subscriptionmanagement.repository.PlanRepository;
 import com.brightloop.subscriptionmanagement.repository.ProductRepository;
+import com.brightloop.subscriptionmanagement.repository.ProductVariantRepository;
 import com.brightloop.subscriptionmanagement.repository.SubscriptionRepository;
 import com.brightloop.subscriptionmanagement.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,6 +50,8 @@ public class SubscriptionService {
     private final PlanRepository planRepository;
     private final ProductRepository productRepository;
     private final PricingService pricingService;
+    private final ProductVariantRepository productVariantRepository;
+    private final InvoiceService invoiceService;
 
     // =========================================================================
     // SUBSCRIPTION CREATION
@@ -184,6 +188,11 @@ public class SubscriptionService {
         subscription.setStatus(targetStatus);
         Subscription updated = subscriptionRepository.save(subscription);
         log.info("Subscription {} transitioned from {} to {}", updated.getSubscriptionNumber(), currentStatus, targetStatus);
+
+        // Activation bills the first period (idempotent, so re-activation never duplicates it)
+        if (targetStatus == SubscriptionStatus.ACTIVE) {
+            invoiceService.generateFirstInvoice(updated);
+        }
 
         return mapToResponseDto(updated);
     }
@@ -343,6 +352,7 @@ public class SubscriptionService {
 
             SubscriptionLine lineEntity = SubscriptionLine.builder()
                     .product(product)
+                    .variant(resolveVariant(product, lineDto.getVariantId()))
                     .quantity(lineDto.getQuantity())
                     .unitPrice(linePricing.getUnitPrice())
                     .tax(linePricing.getTaxAmount())
@@ -352,6 +362,19 @@ public class SubscriptionService {
 
             subscription.addLine(lineEntity);
         }
+    }
+
+    /** Loads the optional line variant and checks it belongs to the line's product. */
+    private ProductVariant resolveVariant(Product product, Long variantId) {
+        if (variantId == null) {
+            return null;
+        }
+        ProductVariant variant = productVariantRepository.findByIdAndActiveTrue(variantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product variant not found with ID: " + variantId));
+        if (!variant.getProduct().getId().equals(product.getId())) {
+            throw new BusinessRuleException("Variant " + variantId + " does not belong to product " + product.getName() + ".");
+        }
+        return variant;
     }
 
     /**
@@ -376,6 +399,9 @@ public class SubscriptionService {
                         .id(line.getId())
                         .productId(line.getProduct().getId())
                         .productName(line.getProduct().getName())
+                        .variantId(line.getVariant() != null ? line.getVariant().getId() : null)
+                        .variantName(line.getVariant() != null
+                                ? line.getVariant().getAttribute() + ": " + line.getVariant().getValue() : null)
                         .quantity(line.getQuantity())
                         .unitPrice(line.getUnitPrice())
                         .tax(line.getTax())
@@ -392,8 +418,11 @@ public class SubscriptionService {
                 .customerEmail(subscription.getCustomer().getEmail())
                 .planId(subscription.getPlan().getId())
                 .planName(subscription.getPlan().getName())
+                .billingPeriod(subscription.getPlan().getBillingPeriod())
                 .startDate(subscription.getStartDate())
                 .expiryDate(subscription.getExpiryDate())
+                .nextBillingDate(BillingCalendar.nextBillingDate(subscription.getStartDate(), subscription.getExpiryDate(),
+                        subscription.getPlan().getBillingPeriod(), subscription.getStatus(), LocalDate.now()))
                 .paymentTerms(subscription.getPaymentTerms())
                 .status(subscription.getStatus())
                 .subtotal(subscription.getSubtotal())

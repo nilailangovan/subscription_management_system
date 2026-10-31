@@ -10,6 +10,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Payload to create a new Subscription Plan.
@@ -28,6 +29,9 @@ public class CreatePlanRequestDto {
 
     /** Optional product link */
     private Long productId;
+
+    // Products included in the plan (many-to-many). Optional; replaces the single productId.
+    private List<Long> productIds;
 
     @NotNull(message = "Price is required")
     @DecimalMin(value = "0.0", inclusive = true, message = "Price cannot be negative")

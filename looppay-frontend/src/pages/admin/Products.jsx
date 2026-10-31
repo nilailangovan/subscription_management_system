@@ -10,7 +10,7 @@ import Modal from '../../components/common/Modal';
 import { useToast, apiErrorMessage } from '../../components/common/Toast';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
-import { formatMoney } from '../../utils/format';
+import { formatMoney, CURRENCY } from '../../utils/format';
 
 const PAGE_SIZE = 10;
 const PRODUCT_TYPES = ['SERVICE', 'GOODS', 'SOFTWARE'].map((t) => ({ value: t, label: t }));
@@ -239,7 +239,7 @@ const Products = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={editingId ? 'Edit Product' : 'Add Product'}
-        subtitle="Prices are in USD"
+        subtitle={`Prices are in ${CURRENCY}`}
       >
         <form onSubmit={handleSave} className="space-y-3.5">
           <Input label="Product Name" name="name" value={form.name} onChange={handleChange} error={formErrors.name} required />

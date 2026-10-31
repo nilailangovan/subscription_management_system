@@ -1,10 +1,10 @@
 import React from 'react';
-import { Repeat, FileText, CreditCard, Sparkles, Clock, ShieldCheck } from 'lucide-react';
+import { Repeat, CreditCard, ShieldCheck } from 'lucide-react';
 import Card from '../../components/common/Card';
-import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import { useAuth } from '../../context/AuthContext';
 import AvailablePlans from './AvailablePlans';
+import { RecentSubscriptions, RecentInvoices } from './PortalRecent';
 
 const CustomerPortal = () => {
   const { user } = useAuth();
@@ -35,62 +35,10 @@ const CustomerPortal = () => {
 
       <AvailablePlans />
 
-      {/* Main Grid: My Subscriptions & My Invoices Empty States */}
+      {/* Latest records from the API */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Section 1: My Subscriptions Empty State */}
-        <Card
-          title="My Subscriptions"
-          subtitle="Active software licenses and recurring payment schedules"
-          action={
-            <Button variant="outline" size="sm" disabled>
-              New Plan
-            </Button>
-          }
-        >
-          <div className="py-12 px-4 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-silver-light border border-silver-border flex items-center justify-center mx-auto text-neutral-400 mb-4 shadow-2xs">
-              <Repeat className="w-7 h-7 text-aubergine/40" />
-            </div>
-
-            <h4 className="text-base font-bold text-aubergine">No active subscriptions yet</h4>
-            <p className="text-xs text-neutral-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
-              You haven't subscribed to any LoopPay software plans yet. When you enroll in a plan, your recurring billing details and quotation status will appear here.
-            </p>
-
-            <div className="mt-6 flex items-center justify-center gap-2">
-              <Button
-                variant="primary"
-                size="sm"
-                disabled
-                icon={Sparkles}
-              >
-                Browse Plans (Phase 2)
-              </Button>
-            </div>
-          </div>
-        </Card>
-
-        {/* Section 2: My Invoices Empty State */}
-        <Card
-          title="My Invoices & Receipts"
-          subtitle="Download tax invoices and inspect payment settlements"
-        >
-          <div className="py-12 px-4 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-silver-light border border-silver-border flex items-center justify-center mx-auto text-neutral-400 mb-4 shadow-2xs">
-              <FileText className="w-7 h-7 text-aubergine/40" />
-            </div>
-
-            <h4 className="text-base font-bold text-aubergine">No invoices generated yet</h4>
-            <p className="text-xs text-neutral-500 mt-1.5 max-w-sm mx-auto leading-relaxed">
-              Every billing cycle generates an idempotent invoice tied to your subscription period. Once billing begins, your downloadable invoices will be listed here.
-            </p>
-
-            <div className="mt-6 inline-flex items-center gap-1.5 text-xs text-neutral-400 bg-silver-light px-3 py-1.5 rounded-lg border border-silver-border">
-              <Clock className="w-3.5 h-3.5" />
-              <span>Next billing run pending plan activation</span>
-            </div>
-          </div>
-        </Card>
+        <RecentSubscriptions />
+        <RecentInvoices />
       </div>
 
       {/* Account Security Information Card */}

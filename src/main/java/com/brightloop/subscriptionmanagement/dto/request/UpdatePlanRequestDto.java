@@ -9,6 +9,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Payload to update an existing Subscription Plan.
@@ -20,6 +21,9 @@ public class UpdatePlanRequestDto {
     private String name;
 
     private Long productId;
+
+    // Products included in the plan (many-to-many). Optional; replaces the single productId.
+    private List<Long> productIds;
 
     @DecimalMin(value = "0.0", inclusive = true, message = "Price cannot be negative")
     private BigDecimal price;

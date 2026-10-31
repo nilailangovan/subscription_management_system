@@ -3,6 +3,7 @@ package com.brightloop.subscriptionmanagement.service;
 import com.brightloop.subscriptionmanagement.dto.request.CreatePlanRequestDto;
 import com.brightloop.subscriptionmanagement.dto.request.RenewPlanRequestDto;
 import com.brightloop.subscriptionmanagement.dto.request.UpdatePlanRequestDto;
+import com.brightloop.subscriptionmanagement.dto.response.PlanProductDto;
 import com.brightloop.subscriptionmanagement.dto.response.PlanResponseDto;
 import com.brightloop.subscriptionmanagement.entity.BillingPeriod;
 import com.brightloop.subscriptionmanagement.entity.Plan;
@@ -21,7 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Service managing Subscription Plan operations, lifecycles, and scheduled auto-closures.
@@ -59,6 +62,7 @@ public class PlanService {
         Plan plan = Plan.builder()
                 .name(request.getName().trim())
                 .product(product)
+                .products(resolveProducts(request.getProductIds()))
                 .price(request.getPrice())
                 .billingPeriod(request.getBillingPeriod())
                 .minQuantity(request.getMinQuantity() != null ? request.getMinQuantity() : 1)
@@ -96,6 +100,9 @@ public class PlanService {
 
         if (request.getName() != null) {
             plan.setName(request.getName().trim());
+        }
+        if (request.getProductIds() != null) {
+            plan.setProducts(resolveProducts(request.getProductIds()));
         }
         if (request.getProductId() != null) {
             plan.setProduct(product);
@@ -349,6 +356,21 @@ public class PlanService {
     }
 
     /**
+     * Loads the active products for the given ids, failing with 404 if any id is unknown or deleted.
+     */
+    private Set<Product> resolveProducts(List<Long> productIds) {
+        Set<Product> products = new LinkedHashSet<>();
+        if (productIds == null) {
+            return products;
+        }
+        for (Long productId : productIds) {
+            products.add(productRepository.findByIdAndActiveTrue(productId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + productId)));
+        }
+        return products;
+    }
+
+    /**
      * Helper to map Plan entity to PlanResponseDto.
      */
     public PlanResponseDto mapToDto(Plan plan) {
@@ -358,6 +380,9 @@ public class PlanService {
                 .name(plan.getName())
                 .productId(product != null ? product.getId() : null)
                 .productName(product != null ? product.getName() : null)
+                .products(plan.getProducts() == null ? List.of() : plan.getProducts().stream()
+                        .map(p -> PlanProductDto.builder().id(p.getId()).name(p.getName()).build())
+                        .toList())
                 .price(plan.getPrice())
                 .billingPeriod(plan.getBillingPeriod())
                 .minQuantity(plan.getMinQuantity())

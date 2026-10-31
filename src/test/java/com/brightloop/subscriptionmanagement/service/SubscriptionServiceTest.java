@@ -11,6 +11,7 @@ import com.brightloop.subscriptionmanagement.exception.BusinessRuleException;
 import com.brightloop.subscriptionmanagement.exception.ResourceNotFoundException;
 import com.brightloop.subscriptionmanagement.repository.PlanRepository;
 import com.brightloop.subscriptionmanagement.repository.ProductRepository;
+import com.brightloop.subscriptionmanagement.repository.ProductVariantRepository;
 import com.brightloop.subscriptionmanagement.repository.SubscriptionRepository;
 import com.brightloop.subscriptionmanagement.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,6 +60,12 @@ class SubscriptionServiceTest {
 
     @Mock
     private ProductRepository productRepository;
+
+    @Mock
+    private ProductVariantRepository productVariantRepository;
+
+    @Mock
+    private InvoiceService invoiceService;
 
     @Mock
     private PricingService pricingService;

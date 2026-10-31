@@ -1,4 +1,5 @@
 import React from 'react';
+import { NavLink } from 'react-router-dom';
 import { Repeat, Menu, LogOut, User as UserIcon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import Badge from '../common/Badge';
@@ -68,24 +69,26 @@ const Navbar = ({ onToggleMobileSidebar, title = 'LoopPay' }) => {
 
           {/* Navigation Links for Customer */}
           <nav className="hidden md:flex items-center gap-1">
-            <a
-              href="/portal"
-              className="px-3.5 py-2 rounded-xl text-sm font-semibold bg-marigold text-aubergine shadow-sm"
-            >
-              Dashboard
-            </a>
-            <a
-              href="#subscriptions"
-              className="px-3.5 py-2 rounded-xl text-sm font-medium text-white/80 hover:text-white hover:bg-aubergine-light transition"
-            >
-              My Subscriptions
-            </a>
-            <a
-              href="#invoices"
-              className="px-3.5 py-2 rounded-xl text-sm font-medium text-white/80 hover:text-white hover:bg-aubergine-light transition"
-            >
-              My Invoices
-            </a>
+            {[
+              { to: '/portal', label: 'Dashboard', end: true },
+              { to: '/portal/subscriptions', label: 'My Subscriptions' },
+              { to: '/portal/invoices', label: 'My Invoices' },
+            ].map((link) => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                end={link.end}
+                className={({ isActive }) =>
+                  `px-3.5 py-2 rounded-xl text-sm transition ${
+                    isActive
+                      ? 'font-semibold bg-marigold text-aubergine shadow-sm'
+                      : 'font-medium text-white/80 hover:text-white hover:bg-aubergine-light'
+                  }`
+                }
+              >
+                {link.label}
+              </NavLink>
+            ))}
           </nav>
 
           {/* User & Logout */}

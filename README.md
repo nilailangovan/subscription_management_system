@@ -490,3 +490,62 @@ All unit tests execute cleanly with **46 passing tests (0 failures, 0 errors)**:
   - Rejection of invalid, backward, or terminal status transitions (HTTP 400).
   - RBAC ownership rules: Customer forbidden from viewing other customers' subscriptions (`AccessDeniedException`).
   - Automatic query scoping for Customer listings.
+
+---
+
+# 🛒 Customer Self-Service Portal
+
+Customers browse plans, price a subscription and subscribe themselves. Everything shown comes from the database through the APIs below, so any product, variant or plan an admin adds appears in the portal automatically.
+
+## 🧱 What was added
+
+- **Plan ↔ Product link**: a plan now has many products (`plan_products` join table). Admin plan create/update accept `productIds`, and plan responses include `products`. The older single `productId` still works.
+- **Invoice entity** (`invoices`): one invoice per subscription and billing period, enforced by a unique constraint on `(subscription_id, billing_period)` (RULES.md §8). The first invoice is issued automatically when a subscription becomes `ACTIVE`, from either the portal or the admin screens. The due date follows the payment terms ("Net 30" = 30 days after issue).
+- **Subscription lines** can store the chosen product variant. Subscription responses now include `billingPeriod` and `nextBillingDate`.
+- **Demo data**: on an empty catalogue, the seeder creates "LoopPay ERP Suite" (variants Standard +0 and Odoo +560) and the plan "ERP Monthly".
+
+## 🔐 Rules
+
+- Every `/api/portal/**` endpoint is `CUSTOMER` only. The customer always comes from the JWT, never from the request body.
+- **Prices are recalculated on the server**: unit price = product `salesPrice` + variant `extraPrice`. The request has no price field, and any price sent is ignored. Tax and discount come from `PricingService` (currently the zero-tax, zero-discount stub until the Phase 3 pricing engine lands).
+- Only plans that are `ACTIVE` and inside their start/end dates can be subscribed to. Paused, closed, expired or not-yet-started plans return **400** with a clear message.
+- Each line's quantity must be at least the plan's `minQuantity` (**400** otherwise).
+- A customer only ever sees their own subscriptions and invoices. Someone else's id returns **404**.
+- Subscriptions are created through `SubscriptionService`, so they also appear in the admin/staff Subscriptions list.
+
+## ⚙️ Configuration (`application.properties`)
+
+| Property | Default | Meaning |
+|----------|---------|---------|
+| `app.subscription.auto-activate-on-confirm` | `true` (env `SUBSCRIPTION_AUTO_ACTIVATE`) | `true`: a confirmed portal subscription becomes `ACTIVE` at once. `false`: it stays `CONFIRMED` until the customer calls the activate endpoint. |
+| `app.subscription.payment-terms` | `Immediate,Net 15,Net 30` | Payment terms customers can choose; the first is the default. |
+
+## 📡 Portal REST API Reference (`/api/portal`, CUSTOMER only)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/portal/plans?page=0&size=10&search=` | Subscribable plans with their products, variants and final prices |
+| `GET` | `/api/portal/plans/{id}` | One subscribable plan (400 if paused, closed, expired or not started) |
+| `GET` | `/api/portal/payment-terms` | Payment terms the customer can pick |
+| `POST` | `/api/portal/subscriptions/preview` | Price `planId` + `lines[{productId, variantId?, quantity}]`: per-line unit price, tax, discount, plus subtotal, totalTax, totalDiscount, grandTotal. Saves nothing. |
+| `POST` | `/api/portal/subscriptions` | Same body plus `startDate` and `paymentTerms`. Creates `SUB-0001`-style subscription: `DRAFT → QUOTATION → CONFIRMED` (→ `ACTIVE` if auto-activate is on) |
+| `POST` | `/api/portal/subscriptions/{id}/activate` | Activate your own `CONFIRMED` subscription (only when auto-activate is off) |
+| `GET` | `/api/portal/subscriptions?page=0&size=10` | Your subscriptions, newest first |
+| `GET` | `/api/portal/subscriptions/{id}` | One of your subscriptions (404 if not yours) |
+| `GET` | `/api/portal/invoices?page=0&size=10&subscriptionId=` | Your invoices, newest first, optionally for one subscription |
+| `GET` | `/api/portal/invoices/{id}` | One of your invoices (404 if not yours) |
+
+Postman: folder **8. Customer Portal (CUSTOMER Only)**, using the `CUSTOMER_JWT_TOKEN` variable.
+
+## 🖥️ Frontend (customer portal)
+
+- **Home**: Available Plans cards with a Subscribe button, plus the latest 3 subscriptions and invoices.
+- **`/portal/subscribe/:planId`**: a 3-step wizard (Choose → Review → Confirm). The Review step calls the preview API on every change.
+- **`/portal/subscriptions`** and **`/portal/subscriptions/:id`**: list, and detail with lines, totals, status timeline and invoices.
+- **`/portal/invoices`**: list with Paid / Due / Overdue badges. Download PDF opens a print-ready invoice; use the browser's "Save as PDF".
+- Currency is formatted in one place (`src/utils/format.js`): INR by default, configurable with `VITE_CURRENCY` and `VITE_LOCALE`.
+
+## 🧪 Unit Tests (67 passing)
+
+- `PortalServiceTest` (15 tests): ownership (404 for other customers' subscriptions, invoices and activation), server-side price recalculation (sales price + variant extra, JWT customer, preview saves nothing), variant/product must belong to the plan, plan availability (paused, closed, expired, not started), `minQuantity` rule, and the auto-activate flag.
+- `BillingCalendarTest` (6 tests): period arithmetic, next billing date and payment-term due dates.

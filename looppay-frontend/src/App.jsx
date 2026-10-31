@@ -23,6 +23,11 @@ import ModulePlaceholder from './pages/admin/ModulePlaceholder';
 import SubscriptionManagement from './pages/admin/SubscriptionManagement';
 import InvoiceManagement from './pages/admin/InvoiceManagement';
 import CustomerPortal from './pages/customer/CustomerPortal';
+import SubscribeWizard from './pages/customer/SubscribeWizard';
+import MySubscriptions from './pages/customer/MySubscriptions';
+import SubscriptionDetail from './pages/customer/SubscriptionDetail';
+import MyInvoices from './pages/customer/MyInvoices';
+import InvoicePrint from './pages/customer/InvoicePrint';
 import Unauthorized from './pages/Unauthorized';
 
 const RootRedirect = () => {
@@ -84,7 +89,21 @@ function App() {
         }
       >
         <Route index element={<CustomerPortal />} />
+        <Route path="subscribe/:planId" element={<SubscribeWizard />} />
+        <Route path="subscriptions" element={<MySubscriptions />} />
+        <Route path="subscriptions/:id" element={<SubscriptionDetail />} />
+        <Route path="invoices" element={<MyInvoices />} />
       </Route>
+
+      {/* Print-ready invoice (no portal chrome, so it prints cleanly) */}
+      <Route
+        path="/portal/invoices/:id/print"
+        element={
+          <ProtectedRoute allowedRoles={['CUSTOMER']}>
+            <InvoicePrint />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Access Denied */}
       <Route path="/unauthorized" element={<Unauthorized />} />

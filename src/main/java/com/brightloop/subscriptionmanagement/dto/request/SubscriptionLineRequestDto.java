@@ -21,6 +21,9 @@ public class SubscriptionLineRequestDto {
     @NotNull(message = "Product ID is required")
     private Long productId;
 
+    // Optional product variant for this line
+    private Long variantId;
+
     @NotNull(message = "Quantity is required")
     @Min(value = 1, message = "Quantity must be at least 1")
     private Integer quantity;

@@ -1,5 +1,6 @@
 package com.brightloop.subscriptionmanagement.dto.response;
 
+import com.brightloop.subscriptionmanagement.entity.BillingPeriod;
 import com.brightloop.subscriptionmanagement.entity.SubscriptionStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,8 +28,11 @@ public class SubscriptionResponseDto {
     private String customerEmail;
     private Long planId;
     private String planName;
+    private BillingPeriod billingPeriod;
     private LocalDate startDate;
     private LocalDate expiryDate;
+    // Next date the customer is billed (null when closed or past expiry)
+    private LocalDate nextBillingDate;
     private String paymentTerms;
     private SubscriptionStatus status;
     private BigDecimal subtotal;

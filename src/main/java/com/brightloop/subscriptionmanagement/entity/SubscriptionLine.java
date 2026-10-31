@@ -40,6 +40,11 @@ public class SubscriptionLine {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
+    /** Variant chosen for this line (optional); its extra price is included in unitPrice */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "variant_id")
+    private ProductVariant variant;
+
     /** Number of units of this product (must be >= 1) */
     @Column(nullable = false)
     private Integer quantity;

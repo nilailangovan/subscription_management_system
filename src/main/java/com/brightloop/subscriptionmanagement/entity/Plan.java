@@ -6,6 +6,8 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * Represents a Subscription Plan in LoopPay.
@@ -50,6 +52,19 @@ public class Plan {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id")
     private Product product;
+
+    /**
+     * Products a customer can subscribe to under this plan (many-to-many via plan_products).
+     * The single "product" field above is kept for older plans created before this link existed.
+     */
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "plan_products",
+        joinColumns = @JoinColumn(name = "plan_id"),
+        inverseJoinColumns = @JoinColumn(name = "product_id")
+    )
+    @Builder.Default
+    private Set<Product> products = new LinkedHashSet<>();
 
     /** Recurring subscription fee for this plan (cannot be negative) */
     @Column(nullable = false, precision = 12, scale = 2)
