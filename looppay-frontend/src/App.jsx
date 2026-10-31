@@ -16,6 +16,10 @@ import ResetPassword from './pages/auth/ResetPassword';
 // Dashboard Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
 import StaffManagement from './pages/admin/StaffManagement';
+import Products from './pages/admin/Products';
+import ProductDetail from './pages/admin/ProductDetail';
+import Plans from './pages/admin/Plans';
+import ModulePlaceholder from './pages/admin/ModulePlaceholder';
 import CustomerPortal from './pages/customer/CustomerPortal';
 import Unauthorized from './pages/Unauthorized';
 
@@ -58,6 +62,14 @@ function App() {
       >
         <Route index element={<AdminDashboard />} />
         <Route path="staff" element={<StaffManagement />} />
+        <Route path="products" element={<Products />} />
+        <Route path="products/:id" element={<ProductDetail />} />
+        <Route path="plans" element={<Plans />} />
+        <Route path="subscriptions" element={<ModulePlaceholder title="Subscriptions" description="Customer subscriptions across their DRAFT → CLOSED lifecycle." />} />
+        <Route path="invoices" element={<ModulePlaceholder title="Invoices" description="Invoices generated per subscription billing period." />} />
+        <Route path="payments" element={<ModulePlaceholder title="Payments" description="Payment logs and reconciliation against invoices." />} />
+        <Route path="discounts" element={<ModulePlaceholder title="Discounts" description="Admin discount rules for plans and invoices." />} />
+        <Route path="taxes" element={<ModulePlaceholder title="Taxes" description="Tax rates and configuration applied to invoices." />} />
       </Route>
 
       {/* Customer Portal */}

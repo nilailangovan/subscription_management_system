@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Repeat, LayoutDashboard, Users, FileText, CreditCard, LogOut, ShieldCheck } from 'lucide-react';
+import { Repeat, LayoutDashboard, Users, FileText, CreditCard, LogOut, Package, Layers, BadgePercent, Landmark } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import Badge from '../common/Badge';
 
@@ -14,9 +14,13 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
   const navItems = [
     { name: 'Dashboard', to: '/admin', icon: LayoutDashboard },
     { name: 'Staff & Team', to: '/admin/staff', icon: Users, adminOnly: true },
-    // Phase 2 placeholders visible as disabled or preview
-    { name: 'Subscriptions', to: '#subscriptions', icon: Repeat, badge: 'Phase 2', disabled: true },
-    { name: 'Invoices', to: '#invoices', icon: FileText, badge: 'Phase 2', disabled: true },
+    { name: 'Products', to: '/admin/products', icon: Package },
+    { name: 'Plans', to: '/admin/plans', icon: Layers },
+    { name: 'Subscriptions', to: '/admin/subscriptions', icon: Repeat },
+    { name: 'Invoices', to: '/admin/invoices', icon: FileText },
+    { name: 'Payments', to: '/admin/payments', icon: CreditCard },
+    { name: 'Discounts', to: '/admin/discounts', icon: BadgePercent, adminOnly: true },
+    { name: 'Taxes', to: '/admin/taxes', icon: Landmark, adminOnly: true },
   ];
 
   return (
@@ -36,8 +40,8 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
           ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
-        {/* Brand Header */}
-        <div>
+        {/* Brand Header (scrolls on short screens so every nav link stays reachable) */}
+        <div className="min-h-0 overflow-y-auto">
           <div className="h-16 flex items-center gap-2.5 px-6 border-b border-aubergine-light/40">
             <div className="w-9 h-9 rounded-xl bg-aubergine-light flex items-center justify-center text-marigold shadow-inner">
               <Repeat className="w-5 h-5 text-marigold" />
@@ -60,25 +64,6 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
 
             {navItems.map((item) => {
               if (item.adminOnly && role !== 'ADMIN') return null;
-
-              if (item.disabled) {
-                return (
-                  <div
-                    key={item.name}
-                    className="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium text-white/40 cursor-not-allowed select-none"
-                  >
-                    <div className="flex items-center gap-3">
-                      <item.icon className="w-4 h-4 text-white/30" />
-                      <span>{item.name}</span>
-                    </div>
-                    {item.badge && (
-                      <span className="text-[10px] uppercase tracking-wider bg-white/10 text-white/60 px-1.5 py-0.5 rounded">
-                        {item.badge}
-                      </span>
-                    )}
-                  </div>
-                );
-              }
 
               return (
                 <NavLink

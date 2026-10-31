@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { KeyRound, Lock, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Lock, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
 import AuthLayout from '../../components/layout/AuthLayout';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
@@ -10,7 +10,8 @@ import { validatePassword } from '../../utils/validators';
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
-  const [token, setToken] = useState('');
+  // The token arrives in the emailed link: /reset-password?token=<uuid>
+  const token = (searchParams.get('token') || '').trim();
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState({});
@@ -20,22 +21,10 @@ const ResetPassword = () => {
 
   const navigate = useNavigate();
 
-  // If token is in the query params (e.g. from the reset email link ?token=xyz), auto-fill it
-  useEffect(() => {
-    const tokenFromUrl = searchParams.get('token');
-    if (tokenFromUrl) {
-      setToken(tokenFromUrl);
-    }
-  }, [searchParams]);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setGeneralError('');
     const newErrors = {};
-
-    if (!token.trim()) {
-      newErrors.token = 'Reset token is required.';
-    }
 
     const pwdValidation = validatePassword(newPassword);
     if (!pwdValidation.isValid) {
@@ -56,7 +45,7 @@ const ResetPassword = () => {
 
     try {
       await api.post('/api/auth/reset-password', {
-        token: token.trim(),
+        token,
         newPassword,
       });
 
@@ -71,7 +60,7 @@ const ResetPassword = () => {
       } else if (err.response?.data?.message) {
         setGeneralError(err.response.data.message);
       } else {
-        setGeneralError('Password reset failed. The token may be expired or already used.');
+        setGeneralError('Password reset failed. The link may be expired or already used.');
       }
     } finally {
       setLoading(false);
@@ -81,16 +70,37 @@ const ResetPassword = () => {
   return (
     <AuthLayout
       title="Create new password"
-      subtitle="Enter your recovery token and pick a secure new password"
+      subtitle="Choose a new password for your LoopPay account"
     >
       {generalError && (
         <div className="mb-4 p-3.5 bg-status-danger-bg border border-status-danger/30 rounded-xl flex items-start gap-2.5 text-xs text-status-danger font-medium animate-in fade-in">
           <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-          <span>{generalError}</span>
+          <span>
+            {generalError}{' '}
+            <Link to="/forgot-password" className="underline font-semibold">
+              Request a new link
+            </Link>
+          </span>
         </div>
       )}
 
-      {success ? (
+      {!token ? (
+        <div className="space-y-4">
+          <div className="p-4 bg-status-danger-bg border border-status-danger/30 rounded-xl flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-status-danger flex-shrink-0 mt-0.5" />
+            <div className="text-xs text-status-danger">
+              <p className="font-semibold text-sm">This reset link is incomplete</p>
+              <p className="mt-1">Open the link from your email again, or request a new one.</p>
+            </div>
+          </div>
+
+          <Link to="/forgot-password">
+            <Button variant="primary" className="w-full">
+              Request a New Link
+            </Button>
+          </Link>
+        </div>
+      ) : success ? (
         <div className="space-y-4">
           <div className="p-4 bg-status-success-bg border border-status-success/30 rounded-xl flex items-start gap-3">
             <CheckCircle className="w-5 h-5 text-status-success flex-shrink-0 mt-0.5" />
@@ -110,19 +120,6 @@ const ResetPassword = () => {
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-3.5">
-          <Input
-            label="Reset Token"
-            id="token"
-            name="token"
-            placeholder="Paste UUID token from email / console"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            error={errors.token}
-            icon={KeyRound}
-            required
-            helperText="Tokens expire after 1 hour."
-          />
-
           <div>
             <Input
               label="New Password"

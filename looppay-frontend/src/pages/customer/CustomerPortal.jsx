@@ -4,6 +4,7 @@ import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import { useAuth } from '../../context/AuthContext';
+import AvailablePlans from './AvailablePlans';
 
 const CustomerPortal = () => {
   const { user } = useAuth();
@@ -31,6 +32,8 @@ const CustomerPortal = () => {
           </div>
         </div>
       </div>
+
+      <AvailablePlans />
 
       {/* Main Grid: My Subscriptions & My Invoices Empty States */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

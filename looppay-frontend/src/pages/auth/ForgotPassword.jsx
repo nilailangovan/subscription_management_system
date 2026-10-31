@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, AlertCircle, CheckCircle, ArrowLeft, Terminal } from 'lucide-react';
+import { Mail, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
 import AuthLayout from '../../components/layout/AuthLayout';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
@@ -57,30 +57,18 @@ const ForgotPassword = () => {
           <div className="p-4 bg-status-success-bg border border-status-success/30 rounded-xl flex items-start gap-3">
             <CheckCircle className="w-5 h-5 text-status-success flex-shrink-0 mt-0.5" />
             <div className="text-xs text-status-success">
-              <p className="font-semibold text-sm">Request Processed</p>
+              <p className="font-semibold text-sm">Check your email</p>
               <p className="mt-1">
-                If an account with <strong>{email}</strong> exists, a password reset link has been dispatched.
-              </p>
-            </div>
-          </div>
-
-          {/* Dev Mode Helper Notice */}
-          <div className="p-3 bg-silver-light border border-silver-border rounded-xl text-xs text-neutral-600 flex items-start gap-2.5">
-            <Terminal className="w-4 h-4 text-aubergine flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-aubergine">Local Testing Notice:</p>
-              <p className="text-[11px] text-neutral-500 mt-0.5">
-                Check your Spring Boot backend console logs to copy the generated UUID reset token!
+                If an account with <strong>{email}</strong> exists, we've sent it a link to create a new
+                password. The link works once and expires in 1 hour.
               </p>
             </div>
           </div>
 
           <div className="pt-2 flex flex-col gap-2">
-            <Link to="/reset-password">
-              <Button variant="primary" className="w-full">
-                Enter Reset Token & Set Password
-              </Button>
-            </Link>
+            <Button variant="outline" className="w-full" onClick={() => setSubmitted(false)}>
+              Didn't get it? Send again
+            </Button>
 
             <Link to="/login" className="flex items-center justify-center gap-1.5 text-xs font-semibold text-aubergine hover:text-marigold py-2">
               <ArrowLeft className="w-3.5 h-3.5" /> Back to Sign In
@@ -100,7 +88,7 @@ const ForgotPassword = () => {
             error={error}
             icon={Mail}
             required
-            helperText="We will send a secure token valid for 1 hour."
+            helperText="We'll email you a link to reset your password."
           />
 
           <Button

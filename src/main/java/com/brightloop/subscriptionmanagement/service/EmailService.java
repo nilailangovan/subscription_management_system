@@ -38,6 +38,10 @@ public class EmailService {
     @Value("${app.frontend.base-url}")
     private String frontendBaseUrl;
 
+    // Sender address; real SMTP providers usually require one verified on your account
+    @Value("${app.mail.from}")
+    private String fromAddress;
+
     /**
      * Constructor injection of JavaMailSender.
      * Spring auto-configures this based on the spring.mail.* properties.
@@ -81,7 +85,7 @@ public class EmailService {
                 message.setTo(toEmail);
                 message.setSubject("LoopPay — Password Reset Request");
                 message.setText(buildResetEmailBody(firstName, resetLink));
-                message.setFrom("no-reply@looppay.com");
+                message.setFrom(fromAddress);
 
                 mailSender.send(message);
                 log.info("Password reset email sent to: {}", toEmail);
