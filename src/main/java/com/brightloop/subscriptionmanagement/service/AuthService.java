@@ -52,9 +52,9 @@ public class AuthService {
     @Value("${app.jwt.reset-token-expiry-ms}")
     private long resetTokenExpiryMs;
 
-    // ─────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // 1. Customer Signup
-    // ─────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /**
      * Registers a new customer account.
@@ -95,9 +95,9 @@ public class AuthService {
         return mapToUserResponse(savedUser);
     }
 
-    // ─────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // 2. Login
-    // ─────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /**
      * Authenticates a user and returns a JWT token.
@@ -143,15 +143,15 @@ public class AuthService {
                 .build();
     }
 
-    // ─────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // 3. Forgot Password
-    // ─────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /**
      * Initiates the password reset flow.
      *
      * Steps:
-     *  1. Find the user by email (return generic message even if not found — security best practice).
+     *  1. Find the user by email (return generic message even if not found â€” security best practice).
      *  2. Delete any old reset tokens for this user.
      *  3. Generate a new unique token with expiry.
      *  4. Send (or log) the reset link.
@@ -162,37 +162,43 @@ public class AuthService {
      * @param request the email to send the reset link to
      */
     @Transactional
-    public void forgotPassword(ForgotPasswordRequestDto request) {
-        // Try to find the user — silently do nothing if not found (security best practice)
-        userRepository.findByEmail(request.getEmail()).ifPresent(user -> {
-            // Step 1: Delete old tokens for this user to avoid stale token accumulation
-            passwordResetTokenRepository.deleteAllByUserId(user.getId());
+    public String forgotPassword(ForgotPasswordRequestDto request) {
+        var userOpt = userRepository.findByEmail(request.getEmail());
+        if (userOpt.isEmpty()) {
+            return null;
+        }
 
-            // Step 2: Generate a unique, random reset token (UUID is cryptographically random)
-            String tokenValue = UUID.randomUUID().toString();
+        User user = userOpt.get();
 
-            // Step 3: Set expiry time
-            LocalDateTime expiresAt = LocalDateTime.now()
-                    .plusNanos(resetTokenExpiryMs * 1_000_000);
+        // Step 1: Delete old tokens for this user to avoid stale token accumulation
+        passwordResetTokenRepository.deleteAllByUserId(user.getId());
 
-            // Step 4: Save the token to the database
-            PasswordResetToken resetToken = PasswordResetToken.builder()
-                    .token(tokenValue)
-                    .user(user)
-                    .expiresAt(expiresAt)
-                    .used(false)
-                    .build();
+        // Step 2: Generate a unique, random reset token (UUID is cryptographically random)
+        String tokenValue = UUID.randomUUID().toString();
 
-            passwordResetTokenRepository.save(resetToken);
+        // Step 3: Set expiry time
+        LocalDateTime expiresAt = LocalDateTime.now()
+                .plusNanos(resetTokenExpiryMs * 1_000_000);
 
-            // Step 5: Send or log the reset link
-            emailService.sendPasswordResetEmail(user.getEmail(), user.getFirstName(), tokenValue);
-        });
+        // Step 4: Save the token to the database
+        PasswordResetToken resetToken = PasswordResetToken.builder()
+                .token(tokenValue)
+                .user(user)
+                .expiresAt(expiresAt)
+                .used(false)
+                .build();
+
+        passwordResetTokenRepository.save(resetToken);
+
+        // Step 5: Send or log the reset link
+        emailService.sendPasswordResetEmail(user.getEmail(), user.getFirstName(), tokenValue);
+
+        return tokenValue;
     }
 
-    // ─────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // 4. Reset Password
-    // ─────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /**
      * Completes the password reset process.
@@ -233,9 +239,9 @@ public class AuthService {
         log.info("Password reset successfully for user: {}", user.getEmail());
     }
 
-    // ─────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // 5. Admin: Create Staff User
-    // ─────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /**
      * Creates a new STAFF user. Only accessible by ADMIN.
@@ -258,7 +264,7 @@ public class AuthService {
                 .lastName(request.getLastName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.STAFF)  // Always STAFF — admin cannot set arbitrary roles
+                .role(Role.STAFF)  // Always STAFF â€” admin cannot set arbitrary roles
                 .active(true)
                 .build();
 
@@ -268,9 +274,9 @@ public class AuthService {
         return mapToUserResponse(savedUser);
     }
 
-    // ─────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // Private Helper Methods
-    // ─────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /**
      * Converts a User entity to a UserResponseDto (strips out the password).

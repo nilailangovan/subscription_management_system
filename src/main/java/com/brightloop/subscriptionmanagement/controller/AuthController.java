@@ -91,15 +91,15 @@ public class AuthController {
      * @return 200 OK with a generic success message
      */
     @PostMapping("/api/auth/forgot-password")
-    public ResponseEntity<ApiResponseDto<Void>> forgotPassword(
+    public ResponseEntity<ApiResponseDto<String>> forgotPassword(
             @Valid @RequestBody ForgotPasswordRequestDto request) {
 
-        authService.forgotPassword(request);
+        String token = authService.forgotPassword(request);
 
-        // Always return the same message regardless of whether the email exists
         return ResponseEntity.ok(
                 ApiResponseDto.success(
-                    "If an account with that email exists, a password reset link has been sent."
+                    "If an account with that email exists, a password reset link has been sent.",
+                    token
                 )
         );
     }

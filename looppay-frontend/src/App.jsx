@@ -16,6 +16,8 @@ import ResetPassword from './pages/auth/ResetPassword';
 // Dashboard Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
 import StaffManagement from './pages/admin/StaffManagement';
+import SubscriptionManagement from './pages/admin/SubscriptionManagement';
+import InvoiceManagement from './pages/admin/InvoiceManagement';
 import CustomerPortal from './pages/customer/CustomerPortal';
 import Unauthorized from './pages/Unauthorized';
 
@@ -58,6 +60,8 @@ function App() {
       >
         <Route index element={<AdminDashboard />} />
         <Route path="staff" element={<StaffManagement />} />
+        <Route path="subscriptions" element={<SubscriptionManagement />} />
+        <Route path="invoices" element={<InvoiceManagement />} />
       </Route>
 
       {/* Customer Portal */}

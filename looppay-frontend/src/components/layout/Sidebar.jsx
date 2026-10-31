@@ -15,8 +15,8 @@ const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
     { name: 'Dashboard', to: '/admin', icon: LayoutDashboard },
     { name: 'Staff & Team', to: '/admin/staff', icon: Users, adminOnly: true },
     // Phase 2 placeholders visible as disabled or preview
-    { name: 'Subscriptions', to: '#subscriptions', icon: Repeat, badge: 'Phase 2', disabled: true },
-    { name: 'Invoices', to: '#invoices', icon: FileText, badge: 'Phase 2', disabled: true },
+    { name: 'Subscriptions', to: '/admin/subscriptions', icon: Repeat },
+    { name: 'Invoices', to: '/admin/invoices', icon: FileText },
   ];
 
   return (
