@@ -15,3 +15,7 @@ target/
 .DS_Store
 Thumbs.db
 
+
+# Frontend build and cache
+looppay-frontend/dist/
+looppay-frontend/node_modules/.vite/

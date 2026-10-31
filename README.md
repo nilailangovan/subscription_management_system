@@ -409,3 +409,84 @@ All Phase 1 and Phase 2 unit tests execute cleanly with **26 passing tests (0 fa
   - Renew action with billing period cycle extension
   - Renew action rejection when `renewable=false`
   - Scheduled auto-close execution for expired plans with `autoClose=true`
+
+---
+
+# 📋 Phase 3: Customer Subscriptions & Order Management
+
+LoopPay Phase 3 implements the full lifecycle of customer subscriptions, sequential contract numbering, multi-product order lines, strict forward status transitions, and pluggable pricing calculation.
+
+## 🧱 Entities & Architecture
+
+### 1. Subscription Entity (`Subscription`)
+- **Fields**: `id`, `subscriptionNumber` (auto-formatted e.g. `SUB-0001`), `customer` (`User`), `plan` (`Plan`), `startDate`, `expiryDate`, `paymentTerms`, `status` (`DRAFT`, `QUOTATION`, `CONFIRMED`, `ACTIVE`, `CLOSED`), `subtotal`, `totalTax`, `totalDiscount`, `grandTotal`, `lines`, `active`, `createdAt`, `updatedAt`.
+- **Validation Constraints**:
+  - `expiryDate` strictly after `startDate`.
+  - Total subscription quantity across lines $\ge$ `Plan.minQuantity`.
+- **Database Indexes**:
+  - `@Index(name = "idx_subscriptions_customer_id", columnList = "customer_id")`
+  - `@Index(name = "idx_subscriptions_status", columnList = "status")`
+  - `@Index(name = "idx_subscriptions_plan_id", columnList = "plan_id")`
+  - `@Index(name = "idx_subscriptions_number", columnList = "subscription_number")`
+  - `@Index(name = "idx_subscriptions_active", columnList = "active")`
+
+### 2. Subscription Line Entity (`SubscriptionLine`)
+- **Fields**: `id`, `subscription`, `product`, `quantity` ($\ge 1$), `unitPrice`, `tax`, `discount`, `amount`.
+- **Relationship**: `@ManyToOne` with `Subscription` (cascade-all, orphan removal).
+- **Database Indexes**:
+  - `@Index(name = "idx_subscription_lines_sub_id", columnList = "subscription_id")`
+  - `@Index(name = "idx_subscription_lines_product_id", columnList = "product_id")`
+
+---
+
+## ⚡ Strict Lifecycle Transitions (`ADMIN` & `STAFF`)
+
+Subscription status transitions must follow the strict forward path:
+$$\text{DRAFT} \longrightarrow \text{QUOTATION} \longrightarrow \text{CONFIRMED} \longrightarrow \text{ACTIVE} \longrightarrow \text{CLOSED}$$
+
+- Any out-of-order jump (e.g. `DRAFT` to `ACTIVE` or `CONFIRMED` to `QUOTATION`) throws HTTP `400 Bad Request` (`BusinessRuleException`).
+- Closed subscriptions cannot be transitioned to any other status.
+- Updates are strictly restricted to `DRAFT` status.
+
+---
+
+## 💰 Pricing Engine Integration (`PricingService`)
+
+LoopPay delegates line and order pricing through a decoupled `PricingService` interface:
+```java
+public interface PricingService {
+    PricingResult calculate(List<PricingLineRequest> lines);
+}
+```
+- **Stub Implementation**: `PricingServiceStubImpl` provides zero tax and zero discount fallback so the system compiles and operates until the dedicated pricing engine is merged.
+
+---
+
+## 📡 Phase 3 REST API Reference
+
+| Method | Endpoint | RBAC | Description |
+|--------|----------|------|-------------|
+| `POST` | `/api/subscriptions` | `ADMIN, STAFF` | Create a new subscription in `DRAFT` status |
+| `PUT` | `/api/subscriptions/{id}` | `ADMIN, STAFF` | Update subscription details (permitted only in `DRAFT`) |
+| `PATCH` | `/api/subscriptions/{id}/status` | `ADMIN, STAFF` | Advance status strictly (`DRAFT -> QUOTATION -> CONFIRMED -> ACTIVE -> CLOSED`) |
+| `GET` | `/api/subscriptions/{id}` | `ADMIN, STAFF, CUSTOMER` | Get subscription by ID (CUSTOMER can only view their own) |
+| `GET` | `/api/subscriptions?status={status}&search={num}&page=0&size=10` | `ADMIN, STAFF, CUSTOMER` | Paginated list (CUSTOMER view automatically scoped to own account) |
+| `POST` | `/api/subscriptions/from-template/{templateId}` | `ADMIN, STAFF` | Quotation Template creation hook (TODO for future phase) |
+
+---
+
+## 🧪 Unit Tests Summary (46 Passing Tests)
+
+All unit tests execute cleanly with **46 passing tests (0 failures, 0 errors)**:
+- `AuthServiceTest` (5 tests): Authentication, password rules, role generation.
+- `ProductVariantServiceTest` (5 tests): Price calculation formulas and soft deletes.
+- `PlanServiceTest` (16 tests): Plan lifecycles, renewal cycles, and auto-close scheduler.
+- `SubscriptionServiceTest` (20 tests):
+  - Sequential `SUB-0001` auto numbering and creation in `DRAFT`.
+  - Date validation (`expiryDate > startDate`).
+  - Plan `minQuantity` enforcement.
+  - Updates allowed only in `DRAFT` status (rejected in other statuses).
+  - Strict step-by-step lifecycle transitions (`DRAFT -> QUOTATION -> CONFIRMED -> ACTIVE -> CLOSED`).
+  - Rejection of invalid, backward, or terminal status transitions (HTTP 400).
+  - RBAC ownership rules: Customer forbidden from viewing other customers' subscriptions (`AccessDeniedException`).
+  - Automatic query scoping for Customer listings.

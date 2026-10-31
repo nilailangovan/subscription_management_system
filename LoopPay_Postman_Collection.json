@@ -1,7 +1,7 @@
-{
+﻿{
   "info": {
     "_postman_id": "looppay-api-collection",
-    "name": "LoopPay — Subscription Management API",
+    "name": "LoopPay â€” Subscription Management API",
     "description": "Postman Collection for testing LoopPay Auth, Products, Variants, Plans, and Lifecycle Actions",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
@@ -743,6 +743,277 @@
           }
         }
       ]
+    },
+    {
+      "name": "7. Subscriptions API",
+      "item": [
+        {
+          "name": "7.1 Create Subscription in DRAFT",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 1,\n  \"planId\": 1,\n  \"startDate\": \"2026-11-01\",\n  \"expiryDate\": \"2027-11-01\",\n  \"paymentTerms\": \"Net 30\",\n  \"lines\": [\n    {\n      \"productId\": 1,\n      \"quantity\": 2,\n      \"unitPrice\": 1000.00\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/subscriptions",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "subscriptions"]
+            },
+            "description": "Creates a new subscription in DRAFT status with auto numbering SUB-0001."
+          }
+        },
+        {
+          "name": "7.2 Update Subscription (DRAFT Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"planId\": 1,\n  \"startDate\": \"2026-11-01\",\n  \"expiryDate\": \"2027-11-01\",\n  \"paymentTerms\": \"Immediate Payment\",\n  \"lines\": [\n    {\n      \"productId\": 1,\n      \"quantity\": 3,\n      \"unitPrice\": 1000.00\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/subscriptions/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "subscriptions", "1"]
+            },
+            "description": "Updates subscription details. Permitted ONLY when subscription is in DRAFT status."
+          }
+        },
+        {
+          "name": "7.3 Transition: DRAFT -> QUOTATION",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"QUOTATION\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/subscriptions/1/status",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "subscriptions", "1", "status"]
+            },
+            "description": "Advances status strictly from DRAFT to QUOTATION."
+          }
+        },
+        {
+          "name": "7.4 Transition: QUOTATION -> CONFIRMED",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CONFIRMED\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/subscriptions/1/status",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "subscriptions", "1", "status"]
+            },
+            "description": "Advances status strictly from QUOTATION to CONFIRMED."
+          }
+        },
+        {
+          "name": "7.5 Transition: CONFIRMED -> ACTIVE",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/subscriptions/1/status",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "subscriptions", "1", "status"]
+            },
+            "description": "Advances status strictly from CONFIRMED to ACTIVE."
+          }
+        },
+        {
+          "name": "7.6 Transition: ACTIVE -> CLOSED",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CLOSED\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:8080/api/subscriptions/1/status",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "subscriptions", "1", "status"]
+            },
+            "description": "Closes an active subscription. Invalid transitions reject with 400."
+          }
+        },
+        {
+          "name": "7.7 Get Subscription By ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/subscriptions/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "subscriptions", "1"]
+            },
+            "description": "Retrieves subscription details. ADMIN and STAFF can view any; CUSTOMER can only view their own."
+          }
+        },
+        {
+          "name": "7.8 List Subscriptions (Filtered & Paginated)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{ADMIN_JWT_TOKEN}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:8080/api/subscriptions?status=DRAFT&page=0&size=10",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "8080",
+              "path": ["api", "subscriptions"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "DRAFT"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Lists subscriptions with optional status filter and search."
+          }
+        }
+      ]
     }
-  ]
+]
 }
