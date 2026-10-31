@@ -1,7 +1,7 @@
 ﻿{
   "info": {
     "_postman_id": "looppay-api-collection",
-    "name": "LoopPay â€” Subscription Management API",
+    "name": "LoopPay — Subscription Management API",
     "description": "Postman Collection for testing LoopPay Auth, Products, Variants, Plans, and Lifecycle Actions",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
